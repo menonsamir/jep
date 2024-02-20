@@ -13,6 +13,9 @@ import {
 import type { Player } from "./state";
 import { GameState, State, stateFromGame } from "./state";
 
+import { ACTIONS_2779_ZINT, GAME_2779_ZINT } from "./engine-actions-2.test";
+import { ACTIONS_2706_TRAG, GAME_2706_TRAG } from "./engine-actions.test";
+
 const PLAYER1: Player = {
   name: "Player 1",
   userId: "1",
@@ -2219,5 +2222,51 @@ describe("getWinningBuzzer", () => {
     buzzes.set(PLAYER2.userId, 100);
     buzzes.set(PLAYER1.userId, 100);
     expect(getWinningBuzzer(buzzes)?.userId).toBe(PLAYER1.userId);
+  });
+});
+
+describe("game2706-trag", () => {
+  it("ends with the state gameOver", () => {
+    const game = GAME_2706_TRAG;
+    const actions = [
+      ...ACTIONS_2706_TRAG,
+      {
+        type: ActionType.Check,
+        payload: {
+          userId: "c339fd3e-4fff-4c42-b7d9-6b10fe4b7756",
+          i: 0,
+          j: 0,
+          correct: true,
+        },
+      },
+      // {
+      //   type: ActionType.NextClue,
+      //   payload: {
+      //     userId: "c339fd3e-4fff-4c42-b7d9-6b10fe4b7756",
+      //     i: 1,
+      //     j: 3,
+      //   },
+      // },
+    ];
+    const initialState = stateFromGame(game);
+    let state = initialState;
+    for (const action of actions) {
+      state = gameEngine(state, action);
+    }
+    expect(state.type).toBe(GameState.GameOver);
+  });
+});
+
+describe("game2779-zint", () => {
+  it("count the number of tiebreaks?", () => {
+    const game = GAME_2779_ZINT;
+    const actions = ACTIONS_2779_ZINT;
+    const initialState = stateFromGame(game);
+    let state = initialState;
+    for (const action of actions) {
+      state = gameEngine(state, action);
+      console.log(state.type);
+    }
+    expect(state.type).toBe(GameState.GameOver);
   });
 });

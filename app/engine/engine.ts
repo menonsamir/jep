@@ -55,6 +55,7 @@ function isValidBuzz(deltaMs: number): boolean {
 export function getWinningBuzzer(
   buzzes: Map<string, number>,
   tiebreakerSeed?: string,
+  printMore: boolean = false,
 ):
   | {
       userId: string;
@@ -90,11 +91,12 @@ export function getWinningBuzzer(
     ],
   );
 
-  quantizedBuzzes.forEach(([userId, qDeltaMs, tiebreak], index) => {
-    console.log(
-      `User: ${userId}, Raw: ${validBuzzes[index][1]}, Quantized: ${qDeltaMs}, Tiebreaker: ${tiebreak}`,
-    );
-  });
+  // quantizedBuzzes.forEach(([userId, qDeltaMs, tiebreak], index) => {
+  //   console.log(
+  //     `User: ${userId}, Raw: ${validBuzzes[index][1]}, Quantized: ${qDeltaMs}, Tiebreaker: ${tiebreak}`,
+  //   );
+  // });
+  // console.log("---------------");
 
   const sortedBuzzes = quantizedBuzzes.sort(
     ([_a, qDeltaA, tiebreakA], [_b, qDeltaB, tiebreakB]) => {
@@ -107,6 +109,29 @@ export function getWinningBuzzer(
   );
 
   const [userId, deltaMs] = sortedBuzzes[0];
+
+  if (
+    printMore &&
+    quantizedBuzzes.length > 1 &&
+    quantizedBuzzes[0][1] === quantizedBuzzes[1][1]
+  ) {
+    console.log("tiebreakerSeed: " + tiebreakerSeed);
+    console.log("Tiebreaker seed: " + tiebreakSeed32);
+    quantizedBuzzes.forEach(([userId, qDeltaMs, tiebreak], index) => {
+      console.log(
+        `User: ${userId}, Raw: ${validBuzzes[index][1]}, Quantized: ${qDeltaMs}, Tiebreaker: ${tiebreak}`,
+      );
+    });
+    console.log(
+      "users in tie: " + quantizedBuzzes.map(([userId]) => userId).join(", "),
+    );
+    console.log(
+      `Tiebreaker for ${quantizedBuzzes.length} players, player ${userId} wins`,
+    );
+    console.log("--------------");
+    console.log("");
+  }
+
   return { userId, deltaMs };
 }
 
@@ -340,7 +365,9 @@ export function gameEngine(state: State, action: Action): State {
         const board = draft.game.boards.at(draft.round);
         const clue = board?.categories.at(j)?.clues.at(i);
 
-        const winningBuzzer = getWinningBuzzer(draft.buzzes, clue?.clue);
+        // console.log("players", JSON.stringify(draft.players));
+        // console.log("clue1: ", clue?.clue);
+        const winningBuzzer = getWinningBuzzer(draft.buzzes, clue?.clue, true);
         if (!winningBuzzer) {
           // Reveal the answer to everyone and mark it as answered. If the clue
           // was wagerable and the player didn't buzz, deduct their wager from
@@ -432,7 +459,12 @@ export function gameEngine(state: State, action: Action): State {
             return;
           }
         } else {
-          const winningBuzzer = getWinningBuzzer(draft.buzzes, clueText);
+          // console.log("clue2: ", clueText);
+          const winningBuzzer = getWinningBuzzer(draft.buzzes, clueText, true);
+          // console.log(
+          //   "for clue" + clueText?.slice(0, 10) + " winningBuzzer: ",
+          //   winningBuzzer,
+          // );
           if (userId !== winningBuzzer?.userId) {
             return;
           }
